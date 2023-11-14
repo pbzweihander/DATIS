@@ -30,7 +30,7 @@ const SRS_VERSION: &str = "1.9.0.0";
 pub struct VoiceStream {
     voice_sink: mpsc::Sender<Packet>,
     voice_stream: SplitStream<UdpFramed<VoiceCodec>>,
-    heartbeat: Pin<Box<dyn Send + Future<Output = Result<(), VoiceStreamError>>>>,
+    heartbeat: Pin<Box<dyn Send + Sync + Future<Output = Result<(), VoiceStreamError>>>>,
     client: Client,
     packet_id: u64,
 }
