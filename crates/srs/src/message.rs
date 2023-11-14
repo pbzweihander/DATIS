@@ -40,45 +40,9 @@ pub struct Radio {
     #[serde(default)]
     pub enc_key: u8,
     #[serde(default)]
-    pub enc_mode: EncryptionMode,
-    #[serde(default = "default_freq")]
-    pub freq_max: f64,
-    #[serde(default = "default_freq")]
-    pub freq_min: f64,
-    #[serde(default = "default_freq")]
     pub freq: f64,
     #[serde(default)]
     pub modulation: Modulation,
-    #[serde(default)]
-    pub name: String,
-    #[serde(default = "default_freq")]
-    pub sec_freq: f64,
-    #[serde(default = "default_volume")]
-    pub volume: f32,
-    #[serde(default)]
-    pub freq_mode: FreqMode,
-    #[serde(default)]
-    pub guard_freq_mode: FreqMode,
-    #[serde(default)]
-    pub vol_mode: VolumeMode,
-    #[serde(default)]
-    pub expansion: bool,
-    #[serde(default = "default_channel")]
-    pub channel: i32,
-    #[serde(default)]
-    pub simul: bool,
-}
-
-fn default_freq() -> f64 {
-    1.0
-}
-
-fn default_volume() -> f32 {
-    1.0
-}
-
-fn default_channel() -> i32 {
-    -1
 }
 
 impl Default for Radio {
@@ -86,53 +50,9 @@ impl Default for Radio {
         Radio {
             enc: false,
             enc_key: 0,
-            enc_mode: EncryptionMode::NoEncryption,
-            freq_max: 1.0,
-            freq_min: 1.0,
-            freq: 1.0,
+            freq: 0.0,
             modulation: Modulation::Disabled,
-            name: "".to_string(),
-            sec_freq: 1.0,
-            volume: 1.0,
-            freq_mode: FreqMode::Cockpit,
-            guard_freq_mode: FreqMode::Cockpit,
-            vol_mode: VolumeMode::Cockpit,
-            expansion: false,
-            channel: -1,
-            simul: false,
         }
-    }
-}
-
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy)]
-#[repr(u8)]
-pub enum EncryptionMode {
-    /// no control
-    NoEncryption = 0,
-    /// FC3 Gui Toggle + Gui Enc key setting
-    EncryptionJustOverlay = 1,
-    /// InCockpit toggle + Incockpit Enc setting
-    EncryptionFull = 2,
-    /// Incockpit toggle + Gui Enc Key setting
-    EncryptionCockpitToggleOverlayCode = 3,
-}
-
-impl Default for EncryptionMode {
-    fn default() -> Self {
-        EncryptionMode::NoEncryption
-    }
-}
-
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy)]
-#[repr(u8)]
-pub enum VolumeMode {
-    Cockpit = 0,
-    Overlay = 1,
-}
-
-impl Default for VolumeMode {
-    fn default() -> Self {
-        VolumeMode::Cockpit
     }
 }
 
@@ -170,20 +90,10 @@ impl Default for Modulation {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RadioInfo {
-    #[serde(default)]
-    pub name: String,
-    #[serde(default)]
-    pub ptt: bool,
     pub radios: Vec<Radio>,
-    #[serde(default)]
-    pub control: RadioSwitchControls,
-    #[serde(default)]
-    pub selected: i16,
     #[serde(default)]
     pub unit: String,
     pub unit_id: u32,
-    #[serde(default)]
-    pub simultaneous_transmission: bool,
 }
 
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy)]

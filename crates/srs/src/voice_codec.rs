@@ -71,13 +71,18 @@ impl Decoder for VoiceCodec {
     // a `None` from a stream means the stream is closed. This is planned to be fixed in tokio
     // 0.2.0. Until then, we are using an option item here instead, so the stream would return
     // `Some(None)` instead.
-    type Item = Option<VoicePacket>;
+    type Item = VoicePacket;
     type Error = io::Error;
 
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         // discard ping messages
         if self.is_head && buf.len() == 22 {
-            return Ok(Some(None));
+            buf.clear();
+            return Ok(None);
+        }
+
+        if buf.is_empty() {
+            return Ok(None);
         }
 
         if let Some(bytes) = self.inner.decode(buf)? {
@@ -134,7 +139,7 @@ impl Decoder for VoiceCodec {
 
             assert_eq!(rd.position(), len);
 
-            Ok(Some(Some(VoicePacket {
+            Ok(Some(VoicePacket {
                 audio_part,
                 frequencies,
                 unit_id,
@@ -142,10 +147,10 @@ impl Decoder for VoiceCodec {
                 hop_count,
                 transmission_sguid,
                 client_sguid,
-            })))
+            }))
         } else {
             self.is_head = false;
-            Ok(Some(None))
+            Ok(None)
         }
     }
 }

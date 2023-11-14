@@ -8,9 +8,7 @@ use std::task::{Context, Poll};
 use std::time::Duration;
 
 use crate::client::Client;
-use crate::message::{
-    Client as MsgClient, GameMessage, Message, MsgType, Radio, RadioInfo, RadioSwitchControls,
-};
+use crate::message::{Client as MsgClient, GameMessage, Message, MsgType, Radio, RadioInfo};
 use crate::messages_codec::{self, MessagesCodec};
 use crate::voice_codec::*;
 use futures::channel::mpsc;
@@ -222,10 +220,7 @@ impl Stream for VoiceStream {
         match s.voice_stream.poll_next_unpin(cx) {
             Poll::Pending => {}
             Poll::Ready(None) => return Poll::Ready(Some(Err(VoiceStreamError::Closed))),
-            Poll::Ready(Some(Ok((None, _)))) => {
-                // not enough data for the codec to create a new item
-            }
-            Poll::Ready(Some(Ok((Some(p), _)))) => {
+            Poll::Ready(Some(Ok((p, _)))) => {
                 return Poll::Ready(Some(Ok(p)));
             }
             Poll::Ready(Some(Err(err))) => return Poll::Ready(Some(Err(err.into()))),
@@ -328,18 +323,20 @@ async fn create_radio_update_message(client: &Client) -> Message {
             name: Some(client.name().to_string()),
             coalition: client.coalition,
             radio_info: Some(RadioInfo {
-                name: "DATIS Radios".to_string(),
-                ptt: false,
-                // TODO: enable one of the radios to receive voice
-                radios: std::iter::repeat_with(Radio::default).take(10).collect(),
-                control: crate::message::RadioSwitchControls::Hotas,
-                selected: 0,
+                radios: vec![Radio {
+                    modulation: if client.freq() <= 87_995_000 {
+                        crate::message::Modulation::Fm
+                    } else {
+                        crate::message::Modulation::Am
+                    },
+                    freq: client.freq() as f64,
+                    ..Default::default()
+                }],
                 unit: client
                     .unit()
                     .map(|u| u.name.clone())
                     .unwrap_or_else(|| client.name().to_string()),
                 unit_id: client.unit().as_ref().map(|u| u.id).unwrap_or(0),
-                simultaneous_transmission: true,
             }),
             lat_lng_position: Some(pos),
         }),
@@ -390,14 +387,9 @@ fn radio_message_from_game(client: &Client, game_message: &GameMessage) -> Messa
             name: Some(game_message.name.clone()),
             coalition: client.coalition,
             radio_info: Some(RadioInfo {
-                name: game_message.name.clone(),
-                ptt: game_message.ptt,
                 radios: game_message.radios.clone(),
-                control: RadioSwitchControls::Hotas,
-                selected: game_message.selected,
                 unit: game_message.unit.clone(),
                 unit_id: game_message.unit_id,
-                simultaneous_transmission: true,
             }),
             lat_lng_position: Some(pos),
         }),
